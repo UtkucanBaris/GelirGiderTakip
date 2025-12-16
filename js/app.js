@@ -545,6 +545,12 @@ window.removeBudget = removeBudget;
 
 function renderSettingsList(containerId, items, type, itemType) {
   const container = document.getElementById(containerId);
+
+  if (!container) {
+    console.error(`Container not found: ${containerId}`);
+    return;
+  }
+
   container.innerHTML = "";
 
   if (!items || !Array.isArray(items)) {
@@ -552,16 +558,37 @@ function renderSettingsList(containerId, items, type, itemType) {
     return;
   }
 
-  items.forEach((item, index) => {
-    const itemDiv = document.createElement("div");
-    itemDiv.className = "settings-item";
-    itemDiv.innerHTML = `
-            <input type="text" class="settings-input" value="${item}" data-original="${item}" data-type="${type}" data-item-type="${itemType}">
-            <button class="btn btn-danger btn-small" onclick="deleteSettingsItem('${type}', '${itemType}', '${item}')">Sil</button>
-        `;
+  if (items.length === 0) {
+    container.innerHTML = "<div class='empty-state'>Liste boş</div>";
+    return;
+  }
 
-    // Handle edit
-    const input = itemDiv.querySelector("input");
+  // Use String Construction for better browser compatibility
+  const htmlContent = items
+    .map((item) => {
+      // Escape quotes for safety in onclick attribute
+      const safeItem = item.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+      const displayItem = item.replace(/"/g, "&quot;");
+
+      return `
+      <div class="settings-item">
+          <input type="text" 
+                 value="${displayItem}" 
+                 data-original="${displayItem}" 
+                 data-type="${type}" 
+                 data-item-type="${itemType}">
+          <button class="btn btn-danger btn-small" 
+                  onclick="deleteSettingsItem('${type}', '${itemType}', '${safeItem}')">Sil</button>
+      </div>
+    `;
+    })
+    .join("");
+
+  container.innerHTML = htmlContent;
+
+  // Attach Event Listeners to the newly created inputs
+  const inputs = container.querySelectorAll("input");
+  inputs.forEach((input) => {
     input.addEventListener("blur", async () => {
       const newValue = input.value.trim();
       const originalValue = input.dataset.original;
@@ -578,8 +605,6 @@ function renderSettingsList(containerId, items, type, itemType) {
         input.blur();
       }
     });
-
-    container.appendChild(itemDiv);
   });
 }
 

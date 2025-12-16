@@ -1053,8 +1053,9 @@ form {
 .reports-container,
 .backup-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  align-items: start;
 }
 
 .settings-section,
@@ -1065,9 +1066,10 @@ form {
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
-  height: 100%;
   display: flex;
   flex-direction: column;
+  height: auto; /* Allow dynamic height */
+  min-height: 400px; /* Ensure logical minimum height */
 }
 
 .settings-section h3,
