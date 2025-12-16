@@ -1,4 +1,5 @@
 // Main Application Logic
+console.log("APP JS LOADED - VERSION 888");
 
 let currentSettings = null;
 let editingTransactionId = null;
