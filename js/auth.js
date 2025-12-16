@@ -168,22 +168,27 @@ class AuthManager {
             .catch((err) => console.error("Profil güncellenemedi:", err));
 
           // Re-init app data with safety checks
-          setTimeout(() => {
+          // Re-init app data with robust checking mechanism
+          const waitForInitApp = (attempts = 0) => {
             if (typeof window.initApp === "function") {
-              try {
-                window.initApp().catch((err) => {
-                  console.error("App init failed:", err);
-                  alert("Uygulama başlatılamadı: " + err.message);
-                });
-              } catch (e) {
-                console.error("Synchronous init error:", e);
-                alert("Hata: " + e.message);
-              }
+              // Found it! Execute.
+              window.initApp().catch((err) => {
+                console.error("App init failed:", err);
+                // Optional: alert("Uygulama başlatılamadı: " + err.message);
+              });
             } else {
-              console.error("initApp function missing!");
-              alert("Uygulama yüklenemedi. Lütfen sayfayı yenileyin.");
+              // Not found yet. Retry up to 50 times (5 seconds)
+              if (attempts < 50) {
+                console.log(`Waiting for app.js... Attempt ${attempts + 1}`);
+                setTimeout(() => waitForInitApp(attempts + 1), 100);
+              } else {
+                console.error("initApp function missing after 5 seconds!");
+                alert("Uygulama yüklenemedi. Lütfen sayfayı yenileyin.");
+              }
             }
-          }, 500);
+          };
+
+          waitForInitApp();
         } else {
           console.error("Critical Error - window.storage is not defined!");
           alert("Veritabanı bağlantısı kurulamadı. Sayfayı yenileyin.");
