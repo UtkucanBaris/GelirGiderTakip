@@ -179,7 +179,7 @@ class AuthManager {
             } else {
               // Not found yet. Retry up to 50 times (5 seconds)
               if (attempts < 50) {
-                console.log(`Waiting for app.js... Attempt ${attempts + 1}`);
+                // console.log(`Waiting for app.js... Attempt ${attempts + 1}`);
                 setTimeout(() => waitForInitApp(attempts + 1), 100);
               } else {
                 console.error("initApp function missing after 5 seconds!");

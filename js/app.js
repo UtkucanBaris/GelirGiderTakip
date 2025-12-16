@@ -573,6 +573,7 @@ function renderSettingsList(containerId, items, type, itemType) {
       return `
       <div class="settings-item">
           <input type="text" 
+                 class="settings-input"
                  value="${displayItem}" 
                  data-original="${displayItem}" 
                  data-type="${type}" 
