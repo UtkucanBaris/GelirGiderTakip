@@ -375,6 +375,11 @@ function closeTransactionModal() {
 // Settings Management
 async function loadSettings() {
   currentSettings = await storage.getSettings();
+  console.log("DEBUG: loadSettings called. Data:", currentSettings);
+
+  const el = document.getElementById("incomeCategoriesList");
+  console.log("DEBUG: Target Element (incomeCategoriesList):", el);
+
   renderSettingsList(
     "incomeCategoriesList",
     currentSettings.incomeCategories,
