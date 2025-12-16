@@ -365,14 +365,17 @@ class StorageManager {
     }
   }
 
-  // Export all data (Uses getAllTransactions which is already Firestore ready)
+  // Export all data
   async exportData() {
+    // Force refresh settings to ensure we get the latest categories/budgets
     const [transactions, settings] = await Promise.all([
       this.getAllTransactions(),
-      this.getSettings(),
+      this.getSettings(true),
     ]);
 
     return {
+      version: "1.0",
+      exportDate: new Date().toISOString(),
       transactions: transactions.map((t) => ({
         ...t,
         date: t.date.toISOString(),
@@ -383,13 +386,9 @@ class StorageManager {
   }
 
   // Import data
-  // NOTE: This performs a lot of writes if importing many items.
-  // Firestore has write limits (bottlenecks usually around 500 writes/sec).
-  // For large imports, consider batching (max 500 ops per batch).
   async importData(data, mode = "merge") {
     this.checkAuth();
 
-    // Simple signature generator for deduplication
     const createSignature = (t) => {
       const dateStr =
         typeof t.date === "string"
@@ -407,9 +406,6 @@ class StorageManager {
       let operationCount = 0;
 
       if (mode === "replace") {
-        // Delete all documents first
-        // Warning: Deleting collections via client is not recommended for huge collections,
-        // but for personal finance app it should be fine.
         const snapshot = await this.db
           .collection(window.DB_COLLECTIONS.USERS)
           .doc(this.userId)
@@ -434,7 +430,7 @@ class StorageManager {
         );
       }
 
-      // Add operations for new transactions
+      // Import Transactions
       if (data.transactions && Array.isArray(data.transactions)) {
         for (const t of data.transactions) {
           if (mode === "merge") {
@@ -453,7 +449,8 @@ class StorageManager {
             category: t.category,
             paymentMethod: t.paymentMethod,
             description: t.description || "",
-            date: typeof t.date === "string" ? new Date(t.date) : t.date,
+            date:
+              typeof t.date === "string" ? new Date(t.date) : new Date(t.date),
             createdAt: t.createdAt ? new Date(t.createdAt) : new Date(),
           };
 
@@ -468,14 +465,17 @@ class StorageManager {
         }
       }
 
-      // Import settings
+      // Import Settings (Merge Logic)
       if (data.settings) {
         const settingsRef = this.db
           .collection(window.DB_COLLECTIONS.USERS)
           .doc(this.userId)
           .collection(window.DB_COLLECTIONS.SETTINGS)
           .doc("default");
-        currentBatch.set(settingsRef, data.settings);
+
+        // Use set with merge: true to preserve existing fields not in import
+        currentBatch.set(settingsRef, data.settings, { merge: true });
+
         operationCount++;
         if (operationCount >= batchLimit) {
           batches.push(currentBatch);
@@ -484,16 +484,17 @@ class StorageManager {
         }
       }
 
-      // Push the last batch
       if (operationCount > 0) {
         batches.push(currentBatch);
       }
 
-      // Commit all batches
       console.log(`Committing ${batches.length} batches...`);
       for (const batch of batches) {
         await batch.commit();
       }
+
+      // Refresh local settings cache
+      await this.getSettings(true);
 
       return Promise.resolve();
     } catch (error) {
