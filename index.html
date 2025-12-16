@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gelir Gider Takip Uygulaması</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/login.css" />
+    <!-- FontAwesome for Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="app-header">
+        <h1>💰 Kişisel Finans Yöneticisi</h1>
+        <div
+          class="header-actions"
+          style="display: flex; gap: 1rem; align-items: center"
+        >
+          <div id="userProfile" class="user-profile" style="display: none">
+            <span id="userEmail"></span>
+            <button
+              id="changePasswordBtn"
+              class="btn btn-primary btn-small"
+              title="Şifre Değiştir"
+            >
+              <i class="fas fa-key"></i>
+            </button>
+            <button
+              id="logoutBtn"
+              class="btn btn-secondary btn-small"
+              title="Çıkış Yap"
+            >
+              <i class="fas fa-sign-out-alt"></i>
+            </button>
+          </div>
+          <button
+            class="theme-toggle"
+            id="themeToggle"
+            aria-label="Tema değiştir"
+          >
+            🌙
+          </button>
+        </div>
+      </header>
+
+      <!-- Navigation Tabs -->
+      <nav class="tab-navigation">
+        <button class="tab-btn active" data-tab="dashboard">
+          📊 Dashboard
+        </button>
+        <button class="tab-btn" data-tab="transactions">💸 İşlemler</button>
+        <button class="tab-btn" data-tab="reports">📈 Raporlar</button>
+        <button class="tab-btn" data-tab="settings">⚙️ Ayarlar</button>
+        <button class="tab-btn" data-tab="backup">💾 Yedekleme</button>
+      </nav>
+
+      <!-- Dashboard Tab -->
+      <section id="dashboard" class="tab-content active">
+        <div class="dashboard-container">
+          <!-- Summary Cards -->
+          <div class="cards-grid">
+            <div class="card balance-card">
+              <h3>Net Bakiye</h3>
+              <p class="card-value" id="netBalance">₺0.00</p>
+              <p class="card-subtitle" style="visibility: hidden">-</p>
+            </div>
+            <div class="card income-card">
+              <h3>Toplam Gelir</h3>
+              <p class="card-value" id="totalIncome">₺0.00</p>
+              <p class="card-subtitle" style="visibility: hidden">-</p>
+            </div>
+            <div class="card expense-card">
+              <h3>Toplam Gider</h3>
+              <p class="card-value" id="totalExpense">₺0.00</p>
+              <p class="card-subtitle" style="visibility: hidden">-</p>
+            </div>
+            <div class="card average-card">
+              <h3>Günlük Ortalama</h3>
+              <p class="card-value" id="dailyAverage">₺0.00</p>
+              <p class="card-subtitle" style="visibility: hidden">-</p>
+            </div>
+            <div class="card highest-card">
+              <h3>En Yüksek Harcama</h3>
+              <p class="card-value" id="highestExpense">₺0.00</p>
+              <p class="card-subtitle" id="highestExpenseDesc">-</p>
+            </div>
+            <div class="card monthly-card">
+              <h3>Bu Ayki Gelir</h3>
+              <p class="card-value" id="monthlyIncome">₺0.00</p>
+              <p class="card-subtitle" style="visibility: hidden">-</p>
+            </div>
+            <div class="card monthly-card">
+              <h3>Bu Ayki Gider</h3>
+              <p class="card-value" id="monthlyExpense">₺0.00</p>
+              <p class="card-subtitle" style="visibility: hidden">-</p>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="charts-grid">
+            <div class="chart-container">
+              <h3>Son 6 Ay Trend Analizi</h3>
+              <canvas id="trendChart"></canvas>
+            </div>
+            <div class="chart-container">
+              <h3>Kategori Analizi (En Çok Harcanan)</h3>
+              <canvas id="categoryChart"></canvas>
+            </div>
+            <div class="chart-container">
+              <h3>Kategori Dağılımı (Pasta Grafik)</h3>
+              <canvas id="categoryPieChart"></canvas>
+            </div>
+            <div class="chart-container">
+              <h3>En Çok Kullanılan Ödeme Yöntemleri</h3>
+              <canvas id="paymentMethodChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Transactions Tab -->
+      <section id="transactions" class="tab-content">
+        <div class="transactions-container">
+          <!-- Add Transaction Button -->
+          <div class="action-bar">
+            <button class="btn btn-primary" id="addTransactionBtn">
+              + Yeni İşlem Ekle
+            </button>
+          </div>
+
+          <!-- Filters -->
+          <div class="filters-section">
+            <h3>Filtreler</h3>
+            <div class="filters-grid">
+              <div class="filter-group">
+                <label>Başlangıç Tarihi</label>
+                <input type="date" id="filterStartDate" class="filter-input" />
+              </div>
+              <div class="filter-group">
+                <label>Bitiş Tarihi</label>
+                <input type="date" id="filterEndDate" class="filter-input" />
+              </div>
+              <div class="filter-group">
+                <label>Tip</label>
+                <select id="filterType" class="filter-input">
+                  <option value="all">Tümü</option>
+                  <option value="income">Gelir</option>
+                  <option value="expense">Gider</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Kategori</label>
+                <select id="filterCategory" class="filter-input">
+                  <option value="all">Tümü</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Ödeme Yöntemi</label>
+                <select id="filterPaymentMethod" class="filter-input">
+                  <option value="all">Tümü</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Açıklama Ara</label>
+                <input
+                  type="text"
+                  id="filterDescription"
+                  class="filter-input"
+                  placeholder="Açıklama içinde ara..."
+                />
+              </div>
+            </div>
+            <div class="filter-actions">
+              <button class="btn btn-secondary" id="clearFiltersBtn">
+                Filtreleri Temizle
+              </button>
+              <button class="btn btn-primary" id="applyFiltersBtn">
+                Filtrele
+              </button>
+            </div>
+          </div>
+
+          <!-- Transactions List -->
+          <div class="transactions-list">
+            <div class="list-header">
+              <div>
+                <h3>İşlemler</h3>
+                <span id="transactionCount" class="transaction-count"></span>
+              </div>
+              <div class="sort-controls">
+                <label>Sırala:</label>
+                <select id="sortBy" class="filter-input">
+                  <option value="date-desc">Tarih (Yeni → Eski)</option>
+                  <option value="date-asc">Tarih (Eski → Yeni)</option>
+                  <option value="amount-desc">Tutar (Yüksek → Düşük)</option>
+                  <option value="amount-asc">Tutar (Düşük → Yüksek)</option>
+                  <option value="category-asc">Kategori (A → Z)</option>
+                </select>
+              </div>
+            </div>
+            <div id="transactionsTable" class="transactions-table">
+              <p class="empty-state">Henüz işlem eklenmemiş.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reports Tab -->
+      <section id="reports" class="tab-content">
+        <div class="reports-container">
+          <h2>Raporlar</h2>
+
+          <div class="report-section">
+            <h3>Tarih Aralığı Raporu</h3>
+            <p>Belirli bir tarih aralığı için detaylı rapor oluşturun.</p>
+
+            <div class="report-filters">
+              <div class="filter-group">
+                <label>Başlangıç Tarihi</label>
+                <input type="date" id="reportStartDate" class="filter-input" />
+              </div>
+              <div class="filter-group">
+                <label>Bitiş Tarihi</label>
+                <input type="date" id="reportEndDate" class="filter-input" />
+              </div>
+              <div class="filter-group">
+                <button class="btn btn-primary" id="generateReportBtn">
+                  Rapor Oluştur
+                </button>
+              </div>
+            </div>
+
+            <div
+              id="reportResults"
+              class="report-results"
+              style="display: none"
+            >
+              <div class="report-summary">
+                <div class="report-card">
+                  <h4>Toplam Gelir</h4>
+                  <p class="report-value income" id="reportTotalIncome">
+                    ₺0.00
+                  </p>
+                </div>
+                <div class="report-card">
+                  <h4>Toplam Gider</h4>
+                  <p class="report-value expense" id="reportTotalExpense">
+                    ₺0.00
+                  </p>
+                </div>
+                <div class="report-card">
+                  <h4>Net Bakiye</h4>
+                  <p class="report-value" id="reportNetBalance">₺0.00</p>
+                </div>
+                <div class="report-card">
+                  <h4>İşlem Sayısı</h4>
+                  <p class="report-value" id="reportTransactionCount">0</p>
+                </div>
+              </div>
+
+              <div class="report-charts">
+                <div class="chart-container">
+                  <h4>Kategori Bazında Harcamalar</h4>
+                  <canvas id="reportCategoryChart"></canvas>
+                  <p class="chart-hint">
+                    Kategoriye tıklayarak detayları görüntüleyin
+                  </p>
+                </div>
+                <div class="chart-container">
+                  <h4>Günlük Trend</h4>
+                  <canvas id="reportDailyChart"></canvas>
+                </div>
+              </div>
+
+              <div
+                id="categoryDetails"
+                class="category-details"
+                style="display: none"
+              >
+                <div class="category-details-header">
+                  <h4 id="categoryDetailsTitle">Kategori Detayları</h4>
+                  <button
+                    class="btn btn-secondary btn-small"
+                    id="closeCategoryDetails"
+                  >
+                    ✕ Kapat
+                  </button>
+                </div>
+                <div
+                  id="categoryDetailsContent"
+                  class="category-details-content"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monthly Comparison Report -->
+          <div class="report-section">
+            <h3>Aylık Karşılaştırma Raporu</h3>
+            <p>Son 6 ayın gelir/gider karşılaştırması ve büyüme oranları.</p>
+            <button class="btn btn-primary" id="generateMonthlyComparisonBtn">
+              Rapor Oluştur
+            </button>
+            <div
+              id="monthlyComparisonResults"
+              class="report-results"
+              style="display: none"
+            >
+              <div class="chart-container">
+                <h4>Aylık Karşılaştırma Grafiği</h4>
+                <canvas id="monthlyComparisonChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Trend Report -->
+          <div class="report-section">
+            <h3>Kategori Trend Analizi</h3>
+            <p>Seçilen kategorilerin zaman içindeki değişimini görüntüleyin.</p>
+            <div class="report-filters">
+              <div class="filter-group">
+                <label>Kategoriler (Çoklu Seçim)</label>
+                <select
+                  id="categoryTrendSelect"
+                  class="filter-input"
+                  multiple
+                  style="min-height: 150px"
+                ></select>
+              </div>
+              <div class="filter-group">
+                <button class="btn btn-primary" id="generateCategoryTrendBtn">
+                  Rapor Oluştur
+                </button>
+              </div>
+            </div>
+            <div
+              id="categoryTrendResults"
+              class="report-results"
+              style="display: none"
+            >
+              <div class="chart-container">
+                <h4>Kategori Trend Grafiği</h4>
+                <canvas id="categoryTrendChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Budget vs Actual Report -->
+          <div class="report-section">
+            <h3>Bütçe vs Gerçekleşen</h3>
+            <p>
+              Bu ayki bütçe hedeflerinizi gerçekleşen harcamalarla
+              karşılaştırın.
+            </p>
+            <button class="btn btn-primary" id="generateBudgetBtn">
+              Rapor Oluştur
+            </button>
+            <div
+              id="budgetResults"
+              class="report-results"
+              style="display: none"
+            >
+              <div class="chart-container">
+                <h4>Bütçe Karşılaştırma Grafiği</h4>
+                <canvas id="budgetChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Yearly Summary Report -->
+          <div class="report-section">
+            <h3>Yıllık Özet Rapor</h3>
+            <p>Seçilen yıl için detaylı özet rapor.</p>
+            <div class="report-filters">
+              <div class="filter-group">
+                <label>Yıl</label>
+                <select id="yearSelect" class="filter-input"></select>
+              </div>
+              <div class="filter-group">
+                <button class="btn btn-primary" id="generateYearlySummaryBtn">
+                  Rapor Oluştur
+                </button>
+              </div>
+            </div>
+            <div
+              id="yearlySummaryResults"
+              class="report-results"
+              style="display: none"
+            >
+              <div class="chart-container">
+                <h4>Aylık Dağılım Grafiği</h4>
+                <canvas id="yearlySummaryChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Tab -->
+      <section id="settings" class="tab-content">
+        <div class="settings-container">
+          <h2>Ayarlar</h2>
+
+          <!-- Income Categories -->
+          <div class="settings-section">
+            <h3>Gelir Kategorileri</h3>
+            <div class="settings-list" id="incomeCategoriesList"></div>
+            <div class="settings-add">
+              <input
+                type="text"
+                id="newIncomeCategory"
+                class="settings-input"
+                placeholder="Yeni kategori adı"
+              />
+              <button class="btn btn-primary" id="addIncomeCategoryBtn">
+                Ekle
+              </button>
+            </div>
+          </div>
+
+          <!-- Expense Categories -->
+          <div class="settings-section">
+            <h3>Gider Kategorileri</h3>
+            <div class="settings-list" id="expenseCategoriesList"></div>
+            <div class="settings-add">
+              <input
+                type="text"
+                id="newExpenseCategory"
+                class="settings-input"
+                placeholder="Yeni kategori adı"
+              />
+              <button class="btn btn-primary" id="addExpenseCategoryBtn">
+                Ekle
+              </button>
+            </div>
+          </div>
+
+          <!-- Income Methods -->
+          <div class="settings-section">
+            <h3>Gelir Yöntemleri</h3>
+            <div class="settings-list" id="incomeMethodsList"></div>
+            <div class="settings-add">
+              <input
+                type="text"
+                id="newIncomeMethod"
+                class="settings-input"
+                placeholder="Yeni yöntem adı"
+              />
+              <button class="btn btn-primary" id="addIncomeMethodBtn">
+                Ekle
+              </button>
+            </div>
+          </div>
+
+          <!-- Expense Methods -->
+          <div class="settings-section">
+            <h3>Gider Yöntemleri</h3>
+            <div class="settings-list" id="expenseMethodsList"></div>
+            <div class="settings-add">
+              <input
+                type="text"
+                id="newExpenseMethod"
+                class="settings-input"
+                placeholder="Yeni yöntem adı"
+              />
+              <button class="btn btn-primary" id="addExpenseMethodBtn">
+                Ekle
+              </button>
+            </div>
+          </div>
+
+          <!-- Excluded Categories from Reports -->
+          <div class="settings-section">
+            <h3>Raporlarda Hariç Tutulacak Kategoriler</h3>
+            <p
+              style="
+                color: var(--text-secondary);
+                font-size: 0.875rem;
+                margin-bottom: 1rem;
+              "
+            >
+              Seçtiğiniz kategoriler raporlarda ve dashboard grafiklerinde
+              gösterilmeyecektir.
+            </p>
+            <div
+              class="excluded-categories-list"
+              id="excludedCategoriesList"
+            ></div>
+          </div>
+
+          <!-- Budget Settings -->
+          <div class="settings-section">
+            <h3>Kategori Bütçeleri</h3>
+            <p
+              style="
+                color: var(--text-secondary);
+                font-size: 0.875rem;
+                margin-bottom: 1rem;
+              "
+            >
+              Her kategori için aylık bütçe hedefi belirleyin.
+            </p>
+            <div class="budget-list" id="budgetList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Backup Tab -->
+      <section id="backup" class="tab-content">
+        <div class="backup-container">
+          <h2>Yedekleme ve Geri Yükleme</h2>
+
+          <div class="backup-section">
+            <h3>Verileri Dışa Aktar</h3>
+            <p>
+              Tüm işlemlerinizi ve ayarlarınızı JSON formatında bilgisayarınıza
+              indirin.
+            </p>
+            <button class="btn btn-primary" id="exportBtn">
+              📥 JSON İndir
+            </button>
+          </div>
+
+          <div class="backup-section">
+            <h3>Excel Dışa Aktar</h3>
+            <p>İşlemlerinizi Excel uyumlu CSV formatında indirin.</p>
+            <button class="btn btn-primary" id="exportExcelBtn">
+              📊 Excel (CSV) İndir
+            </button>
+          </div>
+
+          <div class="backup-section">
+            <h3>Verileri İçe Aktar</h3>
+            <p>
+              Daha önce indirdiğiniz JSON dosyasını yükleyerek verilerinizi geri
+              yükleyin.
+            </p>
+            <div class="import-controls">
+              <input
+                type="file"
+                id="importFile"
+                accept=".json"
+                style="display: none"
+              />
+              <button class="btn btn-secondary" id="selectFileBtn">
+                📁 JSON Dosya Seç
+              </button>
+              <span id="selectedFileName" class="file-name"></span>
+            </div>
+            <div class="import-options">
+              <label>
+                <input type="radio" name="importMode" value="merge" checked />
+                Mevcut verilerle birleştir
+              </label>
+              <label>
+                <input type="radio" name="importMode" value="replace" />
+                Mevcut verilerin üzerine yaz
+              </label>
+            </div>
+            <button class="btn btn-primary" id="importBtn" disabled>
+              📤 JSON Yükle
+            </button>
+          </div>
+
+          <div class="backup-section">
+            <h3>Excel İçe Aktar</h3>
+            <p>Excel (CSV) dosyasını yükleyerek işlemlerinizi içe aktarın.</p>
+            <div class="import-controls">
+              <input
+                type="file"
+                id="importExcelFile"
+                accept=".csv,.xlsx,.xls"
+                style="display: none"
+              />
+              <button class="btn btn-secondary" id="selectExcelFileBtn">
+                📁 Excel Dosya Seç
+              </button>
+              <span id="selectedExcelFileName" class="file-name"></span>
+            </div>
+            <div class="import-options">
+              <label>
+                <input
+                  type="radio"
+                  name="importExcelMode"
+                  value="merge"
+                  checked
+                />
+                Mevcut verilerle birleştir
+              </label>
+              <label>
+                <input type="radio" name="importExcelMode" value="replace" />
+                Mevcut verilerin üzerine yaz
+              </label>
+            </div>
+            <button class="btn btn-primary" id="importExcelBtn" disabled>
+              📤 Excel Yükle
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Add/Edit Transaction Modal -->
+    <div id="transactionModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Yeni İşlem Ekle</h2>
+          <button class="modal-close" id="closeModal">&times;</button>
+        </div>
+        <form id="transactionForm">
+          <input type="hidden" id="transactionId" />
+
+          <div class="form-group">
+            <label>İşlem Tipi *</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input
+                  type="radio"
+                  name="transactionType"
+                  value="income"
+                  required
+                />
+                <span>Gelir</span>
+              </label>
+              <label class="radio-label">
+                <input
+                  type="radio"
+                  name="transactionType"
+                  value="expense"
+                  required
+                />
+                <span>Gider</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="transactionAmount">Tutar (₺) *</label>
+            <input
+              type="text"
+              id="transactionAmount"
+              placeholder="Örn: 122.388,12 veya 122388,12"
+              required
+            />
+            <small
+              style="
+                color: var(--text-secondary);
+                font-size: 0.75rem;
+                margin-top: 0.25rem;
+                display: block;
+              "
+            >
+              Türkçe format: binlik ayırıcı nokta (.), ondalık ayırıcı virgül
+              (,)
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="transactionCategory">Kategori *</label>
+            <select id="transactionCategory" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="transactionPaymentMethod">Ödeme Yöntemi *</label>
+            <select id="transactionPaymentMethod" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="transactionDate">Tarih *</label>
+            <input type="date" id="transactionDate" required />
+          </div>
+
+          <div class="form-group">
+            <label for="transactionTime">Saat *</label>
+            <input type="time" id="transactionTime" required />
+            <button
+              type="button"
+              class="btn btn-secondary btn-small"
+              id="setCurrentTimeBtn"
+              style="margin-top: 0.5rem"
+            >
+              Şu Anki Saati Kullan
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="transactionDescription">Açıklama</label>
+            <textarea
+              id="transactionDescription"
+              rows="3"
+              placeholder="İsteğe bağlı açıklama..."
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="cancelBtn">
+              İptal
+            </button>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal" style="display: none; z-index: 2000">
+      <div class="modal-content login-content">
+        <div class="login-header">
+          <h2>👋 Hoş Geldiniz</h2>
+          <p>Verilerinizi güvenle saklamak için giriş yapın.</p>
+        </div>
+        <div id="authForms">
+          <form id="loginForm" class="auth-form">
+            <div class="form-group">
+              <label>E-posta</label>
+              <input type="email" id="loginEmail" required />
+            </div>
+            <div class="form-group">
+              <label>Şifre</label>
+              <input type="password" id="loginPassword" required />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              Giriş Yap
+            </button>
+            <div class="auth-separator">veya</div>
+            <button
+              type="button"
+              class="btn btn-google btn-block"
+              id="googleLoginBtn"
+            >
+              🔴 Google ile Giriş Yap
+            </button>
+            <p class="auth-footer">
+              Hesabınız yok mu? <a href="#" id="showRegister">Kayıt Ol</a>
+            </p>
+          </form>
+
+          <form id="registerForm" class="auth-form" style="display: none">
+            <div class="form-group">
+              <label>E-posta</label>
+              <input type="email" id="registerEmail" required />
+            </div>
+            <div class="form-group">
+              <label>Şifre</label>
+              <input type="password" id="registerPassword" required />
+            </div>
+            <div class="form-group">
+              <label>Şifre Tekrar</label>
+              <input type="password" id="registerPasswordConfirm" required />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              Kayıt Ol
+            </button>
+            <p class="auth-footer">
+              Zaten hesabınız var mı? <a href="#" id="showLogin">Giriş Yap</a>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/filters.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

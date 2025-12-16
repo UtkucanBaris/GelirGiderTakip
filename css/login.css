@@ -1,0 +1,92 @@
+/* Login Modal Styling */
+.login-content {
+  max-width: 400px;
+  text-align: center;
+  padding: 2rem;
+}
+
+.login-header h2 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.login-header p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.auth-separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 1rem 0;
+}
+
+.auth-separator::before,
+.auth-separator::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.auth-separator::before {
+  margin-right: 0.5em;
+}
+
+.auth-separator::after {
+  margin-left: 0.5em;
+}
+
+.btn-google {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-google:hover {
+  background-color: var(--bg-hover);
+}
+
+.auth-footer {
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.auth-footer a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* User Profile in Header */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .user-profile span {
+    display: none;
+  }
+}
