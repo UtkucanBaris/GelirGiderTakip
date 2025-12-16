@@ -2,8 +2,7 @@
 
 Modern, kullanıcı dostu ve bulut tabanlı bir gelir-gider takip uygulaması. Harcamalarınızı takip edin, detaylı raporlar alın ve bütçenizi yönetin.
 
-![Proje Önizlemesi](https://via.placeholder.com/800x400?text=Gelir+Gider+Takip+Uygulamasi)
-_(Buraya daha sonra uygulamanın ekran görüntüsünü ekleyebilirsiniz)_
+<img width="1863" height="1530" alt="image" src="https://github.com/user-attachments/assets/2cf71ab7-3da9-4fab-a5e7-0e96770a3a9a" />
 
 ## ✨ Özellikler
 
@@ -62,14 +61,6 @@ Bu projeyi kendi bilgisayarınızda çalıştırmak için:
 ├── FIREBASE_SETUP.md   # Veritabanı kurulum rehberi
 └── README.md           # Proje dokümantasyonu
 ```
-
-## 🤝 Katkıda Bulunma
-
-1.  Bu repoyu Forklayın.
-2.  Yeni bir özellik dalı (branch) oluşturun (`git checkout -b ozellik/YeniOzellik`).
-3.  Değişikliklerinizi commit edin (`git commit -m 'Yeni özellik eklendi'`).
-4.  Dalınızı Pushlayın (`git push origin ozellik/YeniOzellik`).
-5.  Bir Pull Request oluşturun.
 
 ## 📄 Lisans
 
