@@ -1,23 +1,29 @@
 // Main Application Logic
-console.log("APP JS LOADED - VERSION 888");
 
 let currentSettings = null;
 let editingTransactionId = null;
 
 // Initialize application
 async function initApp() {
+  console.log("initApp Started");
   try {
     // Initialize database
     await storage.init();
+    console.log("Storage Initialized");
 
     // Load settings
     currentSettings = await storage.getSettings();
+    console.log("Settings Fetched:", currentSettings);
 
     // Setup UI
     setupTabNavigation();
     setupTransactionForm();
     setupSettings();
+    console.log("UI Setup Done (Pre-loadSettings)");
+
     await loadSettings(); // Fix: Force render settings on init
+    console.log("loadSettings Done");
+
     setupBackup();
     setupThemeToggle();
     await setupReports();
