@@ -5,25 +5,18 @@ let editingTransactionId = null;
 
 // Initialize application
 async function initApp() {
-  console.log("initApp Started");
   try {
     // Initialize database
     await storage.init();
-    console.log("Storage Initialized");
 
     // Load settings
     currentSettings = await storage.getSettings();
-    console.log("Settings Fetched:", currentSettings);
 
     // Setup UI
     setupTabNavigation();
     setupTransactionForm();
     setupSettings();
-    console.log("UI Setup Done (Pre-loadSettings)");
-
     await loadSettings(); // Fix: Force render settings on init
-    console.log("loadSettings Done");
-
     setupBackup();
     setupThemeToggle();
     await setupReports();
@@ -382,10 +375,14 @@ function closeTransactionModal() {
 // Settings Management
 async function loadSettings() {
   currentSettings = await storage.getSettings();
-  console.log("DEBUG: loadSettings called. Data:", currentSettings);
-
-  const el = document.getElementById("incomeCategoriesList");
-  console.log("DEBUG: Target Element (incomeCategoriesList):", el);
+  console.log(
+    "DEBUG: loadSettings called. Data Key Check:",
+    Object.keys(currentSettings)
+  );
+  console.log(
+    "DEBUG: Expense Categories Data:",
+    currentSettings.expenseCategories
+  );
 
   renderSettingsList(
     "incomeCategoriesList",
@@ -558,7 +555,13 @@ function renderSettingsList(containerId, items, type, itemType) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
 
+  if (!items || !Array.isArray(items)) {
+    console.error("renderSettingsList: items is invalid", items);
+    return;
+  }
+
   items.forEach((item, index) => {
+    // console.log("Rendering Item:", item); // Temporary Debug
     const itemDiv = document.createElement("div");
     itemDiv.className = "settings-item";
     itemDiv.innerHTML = `
