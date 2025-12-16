@@ -99,8 +99,6 @@ class StorageManager {
           data = { ...this.localSettings, ...data };
         }
 
-        console.log("FINAL FETCHED SETTINGS (Ready for UI):", data);
-
         this.settings = data;
         return this.settings;
       } else {

@@ -375,14 +375,6 @@ function closeTransactionModal() {
 // Settings Management
 async function loadSettings() {
   currentSettings = await storage.getSettings();
-  console.log(
-    "DEBUG: loadSettings called. Data Key Check:",
-    Object.keys(currentSettings)
-  );
-  console.log(
-    "DEBUG: Expense Categories Data:",
-    currentSettings.expenseCategories
-  );
 
   renderSettingsList(
     "incomeCategoriesList",
@@ -561,7 +553,6 @@ function renderSettingsList(containerId, items, type, itemType) {
   }
 
   items.forEach((item, index) => {
-    // console.log("Rendering Item:", item); // Temporary Debug
     const itemDiv = document.createElement("div");
     itemDiv.className = "settings-item";
     itemDiv.innerHTML = `
