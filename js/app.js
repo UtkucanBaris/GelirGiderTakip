@@ -16,6 +16,7 @@ async function initApp() {
     setupTabNavigation();
     setupTransactionForm();
     setupSettings();
+    await loadSettings(); // Fix: Force render settings on init
     setupBackup();
     setupThemeToggle();
     await setupReports();

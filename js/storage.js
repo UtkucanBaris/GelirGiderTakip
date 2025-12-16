@@ -95,10 +95,11 @@ class StorageManager {
 
         // Integrity Check
         if (!data.incomeCategories || !Array.isArray(data.incomeCategories)) {
-          // If still missing, valid keys might be deeper or missing.
           // Fallback to defaults mixed with whatever we found
           data = { ...this.localSettings, ...data };
         }
+
+        console.log("FINAL FETCHED SETTINGS (Ready for UI):", data);
 
         this.settings = data;
         return this.settings;
