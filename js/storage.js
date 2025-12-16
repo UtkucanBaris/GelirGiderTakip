@@ -59,27 +59,26 @@ class StorageManager {
 
   // Get settings
   async getSettings(forceRefresh = false) {
-    this.checkAuth();
+    // Auth check is critical
+    if (!this.userId) {
+      console.warn(
+        "StorageManager: getSettings called without userId. Waiting for auth..."
+      );
+      return this.localSettings; // Return default if no user yet
+    }
 
     // Return cached settings if available and not forced
     if (this.settings && !forceRefresh) {
       return this.settings;
     }
 
-    // Timeout Promise (5 seconds)
     const timeout = new Promise((_, reject) => {
-      setTimeout(
-        () =>
-          reject(
-            new Error(
-              "Veritabanı zaman aşımı. İnternet bağlantınızı kontrol edin."
-            )
-          ),
-        5000
-      );
+      setTimeout(() => reject(new Error("Veritabanı zaman aşımı.")), 5000);
     });
 
     try {
+      console.log(`Debug: Fetching settings for user: ${this.userId}`);
+
       const docRef = this.db
         .collection(window.DB_COLLECTIONS.USERS)
         .doc(this.userId)
@@ -89,10 +88,24 @@ class StorageManager {
       const doc = await Promise.race([docRef.get(), timeout]);
 
       if (doc.exists) {
-        this.settings = doc.data();
+        let data = doc.data();
+
+        // Remove Smart Unwrap logic as requested.
+        // We trust the data is clean now.
+
+        // Integrity Check
+        if (!data.incomeCategories || !Array.isArray(data.incomeCategories)) {
+          // If still missing, valid keys might be deeper or missing.
+          // Fallback to defaults mixed with whatever we found
+          data = { ...this.localSettings, ...data };
+        }
+
+        this.settings = data;
         return this.settings;
       } else {
-        // Initialize default settings in Firestore
+        console.warn(
+          "Debug: Settings document NOT FOUND. Creating defaults..."
+        );
         await this.initDefaultSettings();
         return this.localSettings;
       }
@@ -465,36 +478,46 @@ class StorageManager {
         }
       }
 
-      // Import Settings (Merge Logic)
-      if (data.settings) {
-        const settingsRef = this.db
-          .collection(window.DB_COLLECTIONS.USERS)
-          .doc(this.userId)
-          .collection(window.DB_COLLECTIONS.SETTINGS)
-          .doc("default");
-
-        // Use set with merge: true to preserve existing fields not in import
-        currentBatch.set(settingsRef, data.settings, { merge: true });
-
-        operationCount++;
-        if (operationCount >= batchLimit) {
-          batches.push(currentBatch);
-          currentBatch = this.db.batch();
-          operationCount = 0;
-        }
-      }
-
       if (operationCount > 0) {
         batches.push(currentBatch);
       }
 
-      console.log(`Committing ${batches.length} batches...`);
+      // Commit all transaction batches
+      console.log(`Committing ${batches.length} transaction batches...`);
       for (const batch of batches) {
         await batch.commit();
       }
 
-      // Refresh local settings cache
-      await this.getSettings(true);
+      // Import Settings
+      if (data.settings) {
+        try {
+          await this.db
+            .collection(window.DB_COLLECTIONS.USERS)
+            .doc(this.userId)
+            .collection(window.DB_COLLECTIONS.SETTINGS)
+            .doc("default")
+            .set(data.settings, { merge: true });
+        } catch (settingsError) {
+          console.error(
+            "StorageManager: Settings import failed:",
+            settingsError
+          );
+        }
+
+        // Update local cache
+        if (!this.settings) this.settings = { ...this.localSettings };
+
+        let importedSettings = data.settings;
+        if (importedSettings.default)
+          importedSettings = importedSettings.default;
+        else if (importedSettings.settings)
+          importedSettings = importedSettings.settings;
+
+        this.settings = { ...this.settings, ...importedSettings };
+      } else {
+        // If no settings imported, just refresh from DB
+        await this.getSettings(true);
+      }
 
       return Promise.resolve();
     } catch (error) {

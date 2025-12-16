@@ -814,11 +814,12 @@ function setupBackup() {
       importBtn.disabled = true;
 
       // Reload all data
-      currentSettings = await storage.getSettings();
-      await updateDashboard();
-      await initializeFilters();
-      await loadFilteredTransactions();
-      await loadSettings();
+      currentSettings = await storage.getSettings(true); // Force refresh from storage
+      await loadSettings(); // Update settings UI
+      await initializeFilters(); // Update filter dropdowns
+      updateCategoryAndMethodOptions(); // Update transaction form dropdowns
+      await updateDashboard(); // Update charts
+      await loadFilteredTransactions(); // Update transaction list
     } catch (error) {
       console.error("Import error:", error);
     }
@@ -857,11 +858,13 @@ function setupBackup() {
       importExcelBtn.disabled = true;
 
       // Reload all data
-      currentSettings = await storage.getSettings();
-      await updateDashboard();
-      await initializeFilters();
-      await loadFilteredTransactions();
+      // Reload all data
+      currentSettings = await storage.getSettings(true); // Force refresh from storage
       await loadSettings();
+      await initializeFilters();
+      updateCategoryAndMethodOptions();
+      await updateDashboard();
+      await loadFilteredTransactions();
     } catch (error) {
       console.error("Excel import error:", error);
     }
@@ -916,13 +919,6 @@ function updateThemeIcon(theme) {
 }
 
 // Initialize app when DOM is ready
-// MOVED TO AUTH.JS: initApp is now called after auth state is determined
-/*
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
-} else {
-    initApp();
-}
-*/
+
 // Export initApp for auth.js
 window.initApp = initApp;
