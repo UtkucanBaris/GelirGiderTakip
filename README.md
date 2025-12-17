@@ -2,6 +2,8 @@
 
 Modern, kullanıcı dostu ve bulut tabanlı bir gelir-gider takip uygulaması. Harcamalarınızı takip edin, detaylı raporlar alın ve bütçenizi yönetin.
 
+🔗 **Canlı Demo:** [https://finansgelirgidertakip.netlify.app/](https://finansgelirgidertakip.netlify.app/)
+
 <img width="1863" height="1530" alt="image" src="https://github.com/user-attachments/assets/2cf71ab7-3da9-4fab-a5e7-0e96770a3a9a" />
 
 ## ✨ Özellikler
