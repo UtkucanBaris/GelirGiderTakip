@@ -136,7 +136,14 @@ async function generateReport() {
     });
 
     // Filter excluded categories
-    filteredTransactions = await filterExcludedCategories(filteredTransactions);
+    const includeExcluded = document.getElementById(
+      "reportIncludeExcluded"
+    ).checked;
+    if (!includeExcluded) {
+      filteredTransactions = await filterExcludedCategories(
+        filteredTransactions
+      );
+    }
 
     // Calculate totals
     const totalIncome = filteredTransactions
@@ -193,8 +200,7 @@ async function generateReport() {
 
 // Update category chart for report
 async function updateReportCategoryChart(transactions) {
-  // Filter excluded categories
-  transactions = await filterExcludedCategories(transactions);
+  // Excluded categories are already filtered if needed by the caller
   const expenseTransactions = transactions.filter((t) => t.type === "expense");
 
   // Group by category
@@ -242,6 +248,7 @@ async function updateReportCategoryChart(transactions) {
         {
           label: "Harcama",
           data: data,
+          minBarLength: 10,
           backgroundColor: colors.slice(0, labels.length),
           borderColor: colors
             .slice(0, labels.length)
@@ -251,6 +258,10 @@ async function updateReportCategoryChart(transactions) {
       ],
     },
     options: {
+      interaction: {
+        mode: "index",
+        intersect: false,
+      },
       responsive: true,
       maintainAspectRatio: false,
       plugins: {

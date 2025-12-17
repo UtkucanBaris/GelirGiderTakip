@@ -198,12 +198,12 @@ function renderTransactions() {
     )}</td>
                 <td>${transaction.description || "-"}</td>
                 <td class="action-buttons">
-                    <button class="btn-icon btn-edit" onclick="editTransaction(${
+                    <button class="btn-icon btn-edit" onclick="editTransaction('${
                       transaction.id
-                    })" title="Düzenle">✏️</button>
-                    <button class="btn-icon btn-delete" onclick="deleteTransaction(${
+                    }')" title="Düzenle">✏️</button>
+                    <button class="btn-icon btn-delete" onclick="deleteTransaction('${
                       transaction.id
-                    })" title="Sil">🗑️</button>
+                    }')" title="Sil">🗑️</button>
                 </td>
             </tr>
         `;
